@@ -40,13 +40,31 @@ local function get_focus_step_count(img)
     return tonumber(result) or 0
 end
 
+local function is_grouped(img)
+  return img.group_leader.id ~= img.id
+end
+
 -- Group images by FocusStepCount difference and timestamp
 local function group_focus_bracketed_images()
     local images = dt.gui.selection()
-    if #images < 2 then
-      dt.print("Select at least two images.")
+    -- Filter out already-grouped images
+    local ungrouped = {}
+    for _, img in ipairs(images) do
+      if not is_grouped(img) then
+        table.insert(ungrouped, img)
+      else
+        dt.print_log("Skipping already grouped image: " .. img.filename)
+      end
+    end
+
+    if #ungrouped < 2 then
+      dt.print("Not enough ungrouped images to process.")
       return
     end
+
+    images = ungrouped
+    dt.print("Processing " .. #images .. " ungrouped images.")
+
   
     dt.print("Running focus bracket grouping on " .. #images .. " images.")
   
